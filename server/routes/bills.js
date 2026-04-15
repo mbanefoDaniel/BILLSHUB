@@ -47,7 +47,6 @@ const BILL_PROVIDERS = {
     ]
 };
 
-// Flatten all providers for quick lookup
 function findProvider(providerId, category) {
     const providers = BILL_PROVIDERS[category] || [];
     let provider = providers.find(p => p.id === providerId);
@@ -57,7 +56,6 @@ function findProvider(providerId, category) {
     return provider;
 }
 
-// Check if VTpass integration is enabled
 function isVTpassEnabled() {
     return !!(process.env.VTPASS_API_KEY && process.env.VTPASS_SECRET_KEY);
 }
@@ -71,7 +69,7 @@ router.get('/providers', (req, res) => {
     res.json({ providers: BILL_PROVIDERS });
 });
 
-// POST /api/bills/verify - Verify meter/smartcard number before payment
+// POST /api/bills/verify
 router.post('/verify', authenticate, async (req, res) => {
     const { provider_id, category, account_number, type } = req.body;
 
@@ -80,13 +78,7 @@ router.post('/verify', authenticate, async (req, res) => {
     }
 
     if (!isVTpassEnabled()) {
-        // Sandbox mode: return mock verification
-        return res.json({
-            verified: true,
-            customer_name: 'Test Customer',
-            account_number,
-            message: 'Sandbox mode - verification simulated'
-        });
+        return res.json({ verified: true, customer_name: 'Test Customer', account_number, message: 'Sandbox mode - verification simulated' });
     }
 
     const provider = findProvider(provider_id, category);
@@ -96,23 +88,12 @@ router.post('/verify', authenticate, async (req, res) => {
 
     try {
         const result = await vtpass.verifyAccount(provider.vtpass, account_number, type || 'prepaid');
-        console.log('VTpass verify response:', JSON.stringify(result, null, 2));
-
         if (result.code === '000') {
             const content = result.content || {};
             const customerName = content.Customer_Name || content.customerName || content.customer_name || content.Customer || null;
-            res.json({
-                verified: true,
-                customer_name: customerName || 'Customer Verified',
-                account_number,
-                address: content.Address || content.address || null,
-                meter_type: type || null
-            });
+            res.json({ verified: true, customer_name: customerName || 'Customer Verified', account_number, address: content.Address || content.address || null, meter_type: type || null });
         } else {
-            res.status(400).json({
-                verified: false,
-                error: result.response_description || 'Verification failed. Check the account number.'
-            });
+            res.status(400).json({ verified: false, error: result.response_description || 'Verification failed. Check the account number.' });
         }
     } catch (err) {
         console.error('Verification error:', err.message);
@@ -120,12 +101,11 @@ router.post('/verify', authenticate, async (req, res) => {
     }
 });
 
-// GET /api/bills/variations/:serviceID - Get data plans / TV packages
+// GET /api/bills/variations/:serviceID
 router.get('/variations/:serviceID', authenticate, async (req, res) => {
     const { serviceID } = req.params;
 
     if (!isVTpassEnabled()) {
-        // Return mock variations for sandbox
         return res.json({
             variations: [
                 { variation_code: 'plan1', name: '1GB - 30 days', variation_amount: 500, fixedPrice: 'Yes' },
@@ -137,16 +117,14 @@ router.get('/variations/:serviceID', authenticate, async (req, res) => {
 
     try {
         const result = await vtpass.getVariations(serviceID);
-        res.json({
-            variations: result.content?.varations || result.content?.variations || []
-        });
+        res.json({ variations: result.content?.varations || result.content?.variations || [] });
     } catch (err) {
         console.error('Variations error:', err.message);
         res.status(500).json({ error: 'Failed to fetch service plans' });
     }
 });
 
-// POST /api/bills/pay - Process bill payment via VTpass
+// POST /api/bills/pay
 router.post('/pay', authenticate, async (req, res) => {
     const { provider_id, category, account_number, amount, phone, variation_code, meter_type } = req.body;
 
@@ -167,162 +145,101 @@ router.post('/pay', authenticate, async (req, res) => {
     const provider = findProvider(provider_id, category);
     const providerName = provider ? provider.name : provider_id;
 
-    // Get service fee from settings
-    const feeSetting = db.prepare("SELECT value FROM settings WHERE key = 'service_fee'").get();
-    const serviceFee = feeSetting ? parseFloat(feeSetting.value) : 100;
-    const totalCharge = numAmount + serviceFee;
+    try {
+        const feeSetting = await db.get("SELECT value FROM settings WHERE key = 'service_fee'");
+        const serviceFee = feeSetting ? parseFloat(feeSetting.value) : 100;
+        const totalCharge = numAmount + serviceFee;
 
-    // Check wallet balance
-    const user = db.prepare('SELECT wallet_balance, email, phone FROM users WHERE id = ?').get(req.user.id);
-    if (user.wallet_balance < totalCharge) {
-        return res.status(400).json({
-            error: `Insufficient balance. You need ₦${totalCharge.toLocaleString()} (₦${numAmount.toLocaleString()} + ₦${serviceFee.toLocaleString()} fee)`
-        });
-    }
-
-    const internalRef = 'BILL-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
-    let vtpassResult = null;
-    let vtpassRequestId = null;
-    let paymentStatus = 'completed';
-    let tokenOrPin = null;
-
-    // If VTpass is configured, make real API call
-    if (isVTpassEnabled() && provider && provider.vtpass) {
-        try {
-            const serviceID = provider.vtpass;
-            const userPhone = phone || user.phone || '08000000000';
-
-            switch (category) {
-                case 'airtime':
-                    vtpassResult = await vtpass.buyAirtime(serviceID, account_number, numAmount);
-                    break;
-
-                case 'data':
-                    if (!variation_code) {
-                        return res.status(400).json({ error: 'Please select a data plan' });
-                    }
-                    vtpassResult = await vtpass.buyData(serviceID, account_number, variation_code, numAmount);
-                    break;
-
-                case 'electricity':
-                    vtpassResult = await vtpass.payElectricity(
-                        serviceID, account_number, numAmount, userPhone, meter_type || 'prepaid'
-                    );
-                    // Extract token if electricity
-                    if (vtpassResult.purchased_code) {
-                        tokenOrPin = vtpassResult.purchased_code;
-                    } else if (vtpassResult.content?.transactions?.product_name) {
-                        tokenOrPin = vtpassResult.token || vtpassResult.mainToken || null;
-                    }
-                    break;
-
-                case 'tv':
-                    if (!variation_code) {
-                        return res.status(400).json({ error: 'Please select a TV package' });
-                    }
-                    vtpassResult = await vtpass.payTV(serviceID, account_number, variation_code, numAmount, userPhone);
-                    break;
-
-                case 'betting':
-                    vtpassResult = await vtpass.fundBetting(serviceID, account_number, numAmount);
-                    break;
-
-                case 'education':
-                    vtpassResult = await vtpass.buyEducation(serviceID, variation_code || serviceID, numAmount);
-                    // Extract pins
-                    if (vtpassResult.purchased_code) {
-                        tokenOrPin = vtpassResult.purchased_code;
-                    } else if (vtpassResult.cards) {
-                        tokenOrPin = vtpassResult.cards.map(c => `Serial: ${c.Serial}, Pin: ${c.Pin}`).join('; ');
-                    }
-                    break;
-            }
-
-            vtpassRequestId = vtpassResult.request_id;
-
-            // Check VTpass response status
-            const txnStatus = vtpassResult.content?.transactions?.status || vtpassResult.response_description;
-            if (txnStatus === 'failed' || vtpassResult.code === '016') {
-                paymentStatus = 'failed';
-                // Refund - don't deduct
-                return res.status(400).json({
-                    error: vtpassResult.response_description || 'Payment failed at provider. Your wallet was not charged.',
-                    vtpass_code: vtpassResult.code
-                });
-            } else if (txnStatus === 'delivered' || vtpassResult.code === '000') {
-                paymentStatus = 'completed';
-            } else {
-                paymentStatus = 'pending';
-            }
-        } catch (err) {
-            console.error('VTpass payment error:', err.message);
-            // Don't deduct if API call fails
-            return res.status(500).json({
-                error: 'Payment failed: ' + err.message + '. Your wallet was not charged.'
+        const user = await db.get('SELECT wallet_balance, email, phone FROM users WHERE id = $1', [req.user.id]);
+        if (parseFloat(user.wallet_balance) < totalCharge) {
+            return res.status(400).json({
+                error: `Insufficient balance. You need ₦${totalCharge.toLocaleString()} (₦${numAmount.toLocaleString()} + ₦${serviceFee.toLocaleString()} fee)`
             });
         }
+
+        const internalRef = 'BILL-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
+        let vtpassResult = null;
+        let vtpassRequestId = null;
+        let paymentStatus = 'completed';
+        let tokenOrPin = null;
+
+        if (isVTpassEnabled() && provider && provider.vtpass) {
+            try {
+                const serviceID = provider.vtpass;
+                const userPhone = phone || user.phone || '08000000000';
+
+                switch (category) {
+                    case 'airtime':
+                        vtpassResult = await vtpass.buyAirtime(serviceID, account_number, numAmount);
+                        break;
+                    case 'data':
+                        if (!variation_code) return res.status(400).json({ error: 'Please select a data plan' });
+                        vtpassResult = await vtpass.buyData(serviceID, account_number, variation_code, numAmount);
+                        break;
+                    case 'electricity':
+                        vtpassResult = await vtpass.payElectricity(serviceID, account_number, numAmount, userPhone, meter_type || 'prepaid');
+                        if (vtpassResult.purchased_code) tokenOrPin = vtpassResult.purchased_code;
+                        else if (vtpassResult.content?.transactions?.product_name) tokenOrPin = vtpassResult.token || vtpassResult.mainToken || null;
+                        break;
+                    case 'tv':
+                        if (!variation_code) return res.status(400).json({ error: 'Please select a TV package' });
+                        vtpassResult = await vtpass.payTV(serviceID, account_number, variation_code, numAmount, userPhone);
+                        break;
+                    case 'betting':
+                        vtpassResult = await vtpass.fundBetting(serviceID, account_number, numAmount);
+                        break;
+                    case 'education':
+                        vtpassResult = await vtpass.buyEducation(serviceID, variation_code || serviceID, numAmount);
+                        if (vtpassResult.purchased_code) tokenOrPin = vtpassResult.purchased_code;
+                        else if (vtpassResult.cards) tokenOrPin = vtpassResult.cards.map(c => `Serial: ${c.Serial}, Pin: ${c.Pin}`).join('; ');
+                        break;
+                }
+
+                vtpassRequestId = vtpassResult.request_id;
+                const txnStatus = vtpassResult.content?.transactions?.status || vtpassResult.response_description;
+                if (txnStatus === 'failed' || vtpassResult.code === '016') {
+                    return res.status(400).json({ error: vtpassResult.response_description || 'Payment failed at provider. Your wallet was not charged.', vtpass_code: vtpassResult.code });
+                } else if (txnStatus === 'delivered' || vtpassResult.code === '000') {
+                    paymentStatus = 'completed';
+                } else {
+                    paymentStatus = 'pending';
+                }
+            } catch (err) {
+                console.error('VTpass payment error:', err.message);
+                return res.status(500).json({ error: 'Payment failed: ' + err.message + '. Your wallet was not charged.' });
+            }
+        }
+
+        // Deduct and record
+        await db.run('UPDATE users SET wallet_balance = wallet_balance - $1 WHERE id = $2', [totalCharge, req.user.id]);
+        await db.run(
+            'INSERT INTO transactions (user_id, type, category, description, amount, reference, provider, status, meta) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+            [req.user.id, 'debit', 'bill', `${providerName} - ${category} bill payment`, totalCharge, internalRef, providerName, paymentStatus,
+                JSON.stringify({ account_number, category, provider_id, bill_amount: numAmount, service_fee: serviceFee, vtpass_request_id: vtpassRequestId, vtpass_code: vtpassResult?.code || null, token: tokenOrPin, variation_code: variation_code || null, meter_type: meter_type || null })]
+        );
+        await db.run(
+            'INSERT INTO notifications (user_id, type, title, message) VALUES ($1, $2, $3, $4)',
+            [req.user.id, paymentStatus === 'completed' ? 'success' : 'warning',
+                paymentStatus === 'completed' ? 'Bill Payment Successful' : 'Bill Payment Pending',
+                paymentStatus === 'completed'
+                    ? `Your ${category} bill of ₦${numAmount.toLocaleString()} to ${providerName} has been paid.${tokenOrPin ? ' Token: ' + tokenOrPin : ''}`
+                    : `Your ${category} bill of ₦${numAmount.toLocaleString()} to ${providerName} is being processed.`]
+        );
+
+        const updatedUser = await db.get('SELECT wallet_balance FROM users WHERE id = $1', [req.user.id]);
+
+        res.json({
+            message: paymentStatus === 'completed' ? 'Bill paid successfully' : 'Payment is being processed',
+            receipt: { reference: internalRef, provider: providerName, category, account_number, amount: numAmount, service_fee: serviceFee, total_charged: totalCharge, token: tokenOrPin, date: new Date().toISOString(), status: paymentStatus, vtpass_request_id: vtpassRequestId },
+            balance: parseFloat(updatedUser.wallet_balance)
+        });
+    } catch (err) {
+        console.error('Bill pay error:', err.message);
+        res.status(500).json({ error: 'Bill payment failed' });
     }
-
-    // Deduct from wallet and record transaction
-    const payBill = db.transaction(() => {
-        db.prepare('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?').run(totalCharge, req.user.id);
-
-        db.prepare(
-            'INSERT INTO transactions (user_id, type, category, description, amount, reference, provider, status, meta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(
-            req.user.id, 'debit', 'bill',
-            `${providerName} - ${category} bill payment`,
-            totalCharge, internalRef, providerName, paymentStatus,
-            JSON.stringify({
-                account_number,
-                category,
-                provider_id,
-                bill_amount: numAmount,
-                service_fee: serviceFee,
-                vtpass_request_id: vtpassRequestId,
-                vtpass_code: vtpassResult?.code || null,
-                token: tokenOrPin,
-                variation_code: variation_code || null,
-                meter_type: meter_type || null
-            })
-        );
-
-        db.prepare(
-            'INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)'
-        ).run(
-            req.user.id,
-            paymentStatus === 'completed' ? 'success' : 'warning',
-            paymentStatus === 'completed' ? 'Bill Payment Successful' : 'Bill Payment Pending',
-            paymentStatus === 'completed'
-                ? `Your ${category} bill of ₦${numAmount.toLocaleString()} to ${providerName} has been paid.${tokenOrPin ? ' Token: ' + tokenOrPin : ''}`
-                : `Your ${category} bill of ₦${numAmount.toLocaleString()} to ${providerName} is being processed.`
-        );
-    });
-
-    payBill();
-
-    const updatedUser = db.prepare('SELECT wallet_balance FROM users WHERE id = ?').get(req.user.id);
-
-    res.json({
-        message: paymentStatus === 'completed' ? 'Bill paid successfully' : 'Payment is being processed',
-        receipt: {
-            reference: internalRef,
-            provider: providerName,
-            category,
-            account_number,
-            amount: numAmount,
-            service_fee: serviceFee,
-            total_charged: totalCharge,
-            token: tokenOrPin,
-            date: new Date().toISOString(),
-            status: paymentStatus,
-            vtpass_request_id: vtpassRequestId
-        },
-        balance: updatedUser.wallet_balance
-    });
 });
 
-// POST /api/bills/requery - Check status of a pending transaction
+// POST /api/bills/requery
 router.post('/requery', authenticate, async (req, res) => {
     const { request_id, transaction_ref } = req.body;
 
@@ -330,67 +247,61 @@ router.post('/requery', authenticate, async (req, res) => {
         return res.status(400).json({ error: 'Provide request_id or transaction_ref' });
     }
 
-    // Find the transaction
-    let txn;
-    if (transaction_ref) {
-        txn = db.prepare('SELECT * FROM transactions WHERE reference = ? AND user_id = ?').get(transaction_ref, req.user.id);
-    }
-
-    const vtpassRequestId = request_id || (txn ? JSON.parse(txn.meta || '{}').vtpass_request_id : null);
-
-    if (!vtpassRequestId) {
-        return res.status(400).json({ error: 'No VTpass request ID found for this transaction' });
-    }
-
-    if (!isVTpassEnabled()) {
-        return res.json({ status: 'completed', message: 'Sandbox mode' });
-    }
-
     try {
+        let txn;
+        if (transaction_ref) {
+            txn = await db.get('SELECT * FROM transactions WHERE reference = $1 AND user_id = $2', [transaction_ref, req.user.id]);
+        }
+
+        const vtpassRequestId = request_id || (txn ? JSON.parse(txn.meta || '{}').vtpass_request_id : null);
+        if (!vtpassRequestId) {
+            return res.status(400).json({ error: 'No VTpass request ID found for this transaction' });
+        }
+
+        if (!isVTpassEnabled()) {
+            return res.json({ status: 'completed', message: 'Sandbox mode' });
+        }
+
         const result = await vtpass.queryTransaction(vtpassRequestId);
         const status = result.content?.transactions?.status;
 
-        // Update local transaction status if changed
         if (txn && status && status !== txn.status) {
-            db.prepare('UPDATE transactions SET status = ? WHERE id = ?').run(
-                status === 'delivered' ? 'completed' : status,
-                txn.id
-            );
+            await db.run('UPDATE transactions SET status = $1 WHERE id = $2', [status === 'delivered' ? 'completed' : status, txn.id]);
 
             if (status === 'failed' && txn.status !== 'failed') {
-                // Refund
-                db.prepare('UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?').run(txn.amount, req.user.id);
-                db.prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)').run(
-                    req.user.id, 'info', 'Refund Processed',
-                    `₦${txn.amount.toLocaleString()} refunded for failed ${txn.provider} payment.`
+                await db.run('UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2', [parseFloat(txn.amount), req.user.id]);
+                await db.run(
+                    'INSERT INTO notifications (user_id, type, title, message) VALUES ($1, $2, $3, $4)',
+                    [req.user.id, 'info', 'Refund Processed', `₦${parseFloat(txn.amount).toLocaleString()} refunded for failed ${txn.provider} payment.`]
                 );
             }
         }
 
-        res.json({
-            status: status === 'delivered' ? 'completed' : status,
-            vtpass_response: result.content?.transactions || {},
-            token: result.purchased_code || result.mainToken || null
-        });
+        res.json({ status: status === 'delivered' ? 'completed' : status, vtpass_response: result.content?.transactions || {}, token: result.purchased_code || result.mainToken || null });
     } catch (err) {
         res.status(500).json({ error: 'Failed to query transaction status' });
     }
 });
 
 // GET /api/bills/history
-router.get('/history', authenticate, (req, res) => {
+router.get('/history', authenticate, async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const offset = parseInt(req.query.offset) || 0;
 
-    const bills = db.prepare(
-        'SELECT * FROM transactions WHERE user_id = ? AND category = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
-    ).all(req.user.id, 'bill', limit, offset);
-
-    const total = db.prepare(
-        'SELECT COUNT(*) as count FROM transactions WHERE user_id = ? AND category = ?'
-    ).get(req.user.id, 'bill');
-
-    res.json({ bills, total: total.count, limit, offset });
+    try {
+        const bills = await db.query(
+            'SELECT * FROM transactions WHERE user_id = $1 AND category = $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4',
+            [req.user.id, 'bill', limit, offset]
+        );
+        const total = await db.get(
+            'SELECT COUNT(*) as count FROM transactions WHERE user_id = $1 AND category = $2',
+            [req.user.id, 'bill']
+        );
+        res.json({ bills, total: parseInt(total.count), limit, offset });
+    } catch (err) {
+        console.error('Bills history error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch bill history' });
+    }
 });
 
 module.exports = router;

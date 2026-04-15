@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const { initializeDatabase } = require('./db/database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,11 +42,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, etc)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(null, true); // In dev, allow all; tighten in production
+            callback(null, true);
         }
     },
     credentials: true
@@ -53,7 +53,7 @@ app.use(cors({
 
 // Rate limiting
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000,
     max: 300,
     message: { error: 'Too many requests, please try again later.' }
 });
@@ -65,7 +65,7 @@ const authLimiter = rateLimit({
 });
 
 // Paystack webhook needs raw body for signature verification
-app.post('/api/webhook/paystack', express.raw({ type: 'application/json' }), (req, res) => {
+app.post('/api/webhook/paystack', express.raw({ type: 'application/json' }), async (req, res) => {
     const paystack = require('./services/paystack');
     const db = require('./db/database');
 
@@ -86,16 +86,20 @@ app.post('/api/webhook/paystack', express.raw({ type: 'application/json' }), (re
         const userId = data.metadata?.user_id;
 
         if (userId && reference) {
-            const existingTxn = db.prepare('SELECT * FROM transactions WHERE reference = ?').get(reference);
+            try {
+                const existingTxn = await db.get('SELECT * FROM transactions WHERE reference = $1', [reference]);
 
-            if (existingTxn && existingTxn.status === 'pending') {
-                db.prepare('UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?').run(amountInNaira, userId);
-                db.prepare('UPDATE transactions SET status = ? WHERE reference = ?').run('completed', reference);
-                db.prepare('INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)').run(
-                    userId, 'success', 'Wallet Funded',
-                    `₦${amountInNaira.toLocaleString()} has been added to your wallet.`
-                );
-                console.log(`Webhook: Funded ₦${amountInNaira} for user ${userId}, ref: ${reference}`);
+                if (existingTxn && existingTxn.status === 'pending') {
+                    await db.run('UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2', [amountInNaira, userId]);
+                    await db.run('UPDATE transactions SET status = $1 WHERE reference = $2', ['completed', reference]);
+                    await db.run(
+                        'INSERT INTO notifications (user_id, type, title, message) VALUES ($1, $2, $3, $4)',
+                        [userId, 'success', 'Wallet Funded', `₦${amountInNaira.toLocaleString()} has been added to your wallet.`]
+                    );
+                    console.log(`Webhook: Funded ₦${amountInNaira} for user ${userId}, ref: ${reference}`);
+                }
+            } catch (err) {
+                console.error('Webhook DB error:', err.message);
             }
         }
     }
@@ -116,7 +120,23 @@ app.use(express.static(path.join(__dirname, '..'), {
     }
 }));
 
-// API routes — rate-limit only login/register, not /auth/me
+// Initialize database and start server (skip listen on Vercel)
+let dbInitialized = false;
+
+async function ensureDb() {
+    if (!dbInitialized) {
+        await initializeDatabase();
+        dbInitialized = true;
+    }
+}
+
+// Ensure DB is initialized before any request
+app.use(async (req, res, next) => {
+    try { await ensureDb(); } catch (err) { console.error('DB init error:', err.message); }
+    next();
+});
+
+// API routes
 const authRouter = require('./routes/auth');
 app.post('/api/auth/login', authLimiter);
 app.post('/api/auth/register', authLimiter);
@@ -133,12 +153,11 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// SPA fallback - serve pages for unmatched routes
+// SPA fallback
 app.get('/{*splat}', (req, res) => {
     if (req.path.startsWith('/api/')) {
         return res.status(404).json({ error: 'API route not found' });
     }
-    // Serve 404 page for unknown routes
     res.status(404).sendFile(path.join(__dirname, '..', '404.html'));
 });
 
@@ -148,7 +167,17 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Nefotech server running at http://localhost:${PORT}`);
-    console.log(`API available at http://localhost:${PORT}/api`);
-});
+// Start server (skip listen on Vercel)
+if (!process.env.VERCEL) {
+    ensureDb().then(() => {
+        app.listen(PORT, () => {
+            console.log(`Nefotech server running at http://localhost:${PORT}`);
+            console.log(`API available at http://localhost:${PORT}/api`);
+        });
+    }).catch(err => {
+        console.error('Failed to initialize database:', err);
+        process.exit(1);
+    });
+}
+
+module.exports = app;

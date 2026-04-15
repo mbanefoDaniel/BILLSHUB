@@ -17,15 +17,19 @@ function authenticate(req, res, next) {
     }
 }
 
-function requireAdmin(req, res, next) {
-    const user = db.prepare('SELECT role, status FROM users WHERE id = ?').get(req.user.id);
-    if (!user || user.role !== 'admin') {
-        return res.status(403).json({ error: 'Admin access required' });
+async function requireAdmin(req, res, next) {
+    try {
+        const user = await db.get('SELECT role, status FROM users WHERE id = $1', [req.user.id]);
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+        if (user.status !== 'active') {
+            return res.status(403).json({ error: 'Account is suspended' });
+        }
+        next();
+    } catch (err) {
+        return res.status(500).json({ error: 'Authorization check failed' });
     }
-    if (user.status !== 'active') {
-        return res.status(403).json({ error: 'Account is suspended' });
-    }
-    next();
 }
 
 module.exports = { authenticate, requireAdmin };

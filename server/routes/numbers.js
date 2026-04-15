@@ -142,8 +142,7 @@ router.post('/purchase', authenticate, async (req, res) => {
     const price = country.price;
     const serviceName = service || 'any';
 
-    // In live mode, calculate dynamic price from 5sim rates with markup
-    let chargePrice = price; // Default to hardcoded price (used in sandbox)
+    let chargePrice = price;
     if (is5simEnabled()) {
         try {
             const products = await fivesim.getProducts(country_id);
@@ -156,274 +155,262 @@ router.post('/purchase', authenticate, async (req, res) => {
             }
         } catch (err) {
             console.error('Price lookup failed, using fallback:', err.message);
-            // Fall back to hardcoded country price
         }
     }
 
-    // Check balance
-    const user = db.prepare('SELECT wallet_balance FROM users WHERE id = ?').get(req.user.id);
-    if (user.wallet_balance < chargePrice) {
-        return res.status(400).json({ error: 'Insufficient wallet balance' });
-    }
-
-    const ref = 'NUM-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
-    let phoneNumber, expiresAt, fivesimOrderId = null;
-
-    if (is5simEnabled()) {
-        // Real 5sim purchase
-        try {
-            const order = await fivesim.buyNumber(country_id, serviceName);
-
-            phoneNumber = order.phone;
-            // If phone doesn't start with +, add the country code
-            if (!phoneNumber.startsWith('+')) {
-                phoneNumber = '+' + phoneNumber;
-            }
-            fivesimOrderId = order.id;
-            expiresAt = order.expires || new Date(Date.now() + 20 * 60 * 1000).toISOString();
-
-        } catch (err) {
-            console.error('5sim purchase error:', err.message);
-            return res.status(400).json({ error: err.message });
+    try {
+        const user = await db.get('SELECT wallet_balance FROM users WHERE id = $1', [req.user.id]);
+        if (parseFloat(user.wallet_balance) < chargePrice) {
+            return res.status(400).json({ error: 'Insufficient wallet balance' });
         }
-    } else {
-        // Sandbox mode
-        phoneNumber = generatePhoneNumber(country.code);
-        expiresAt = new Date(Date.now() + 20 * 60 * 1000).toISOString();
-    }
 
-    const purchase = db.transaction(() => {
-        db.prepare('UPDATE users SET wallet_balance = wallet_balance - ? WHERE id = ?').run(chargePrice, req.user.id);
+        const ref = 'NUM-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8);
+        let phoneNumber, expiresAt, fivesimOrderId = null;
 
-        const result = db.prepare(
-            'INSERT INTO virtual_numbers (user_id, number, country, country_code, service, type, price, expires_at, status, meta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).run(
-            req.user.id, phoneNumber, country.name, country_id,
-            serviceName, type || 'temporary', chargePrice, expiresAt, 'active',
-            JSON.stringify({ fivesim_order_id: fivesimOrderId })
-        );
-
-        db.prepare(
-            'INSERT INTO transactions (user_id, type, category, description, amount, reference, meta) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).run(
-            req.user.id, 'debit', 'number',
-            `Virtual number purchase - ${country.name} (${serviceName})`,
-            chargePrice, ref,
-            JSON.stringify({ country_id, number: phoneNumber, service: serviceName, fivesim_order_id: fivesimOrderId })
-        );
-
-        db.prepare(
-            'INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)'
-        ).run(req.user.id, 'success', 'Number Purchased', `Your ${country.name} number ${phoneNumber} is ready!`);
-
-        return result.lastInsertRowid;
-    });
-
-    const numberId = purchase();
-
-    // Sandbox: simulate SMS after delay
-    if (!is5simEnabled()) {
-        const randomDelay = 3000 + Math.floor(Math.random() * 5000);
-        setTimeout(() => {
+        if (is5simEnabled()) {
             try {
-                const template = SMS_TEMPLATES[Math.floor(Math.random() * SMS_TEMPLATES.length)];
-                const code = generateOtp();
-                const message = template.message.replace('{code}', code);
-
-                db.prepare(
-                    'INSERT INTO sms_messages (number_id, sender, message, code) VALUES (?, ?, ?, ?)'
-                ).run(numberId, template.sender, message, code);
-
-                db.prepare(
-                    'INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)'
-                ).run(req.user.id, 'info', 'New SMS Received', `New message from ${template.sender} on ${phoneNumber}`);
-            } catch (e) {
-                // Number may have expired
+                const order = await fivesim.buyNumber(country_id, serviceName);
+                phoneNumber = order.phone;
+                if (!phoneNumber.startsWith('+')) {
+                    phoneNumber = '+' + phoneNumber;
+                }
+                fivesimOrderId = order.id;
+                expiresAt = order.expires || new Date(Date.now() + 20 * 60 * 1000).toISOString();
+            } catch (err) {
+                console.error('5sim purchase error:', err.message);
+                return res.status(400).json({ error: err.message });
             }
-        }, randomDelay);
+        } else {
+            phoneNumber = generatePhoneNumber(country.code);
+            expiresAt = new Date(Date.now() + 20 * 60 * 1000).toISOString();
+        }
+
+        await db.run('UPDATE users SET wallet_balance = wallet_balance - $1 WHERE id = $2', [chargePrice, req.user.id]);
+
+        const numResult = await db.get(
+            'INSERT INTO virtual_numbers (user_id, number, country, country_code, service, type, price, expires_at, status, meta) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
+            [req.user.id, phoneNumber, country.name, country_id, serviceName, type || 'temporary', chargePrice, expiresAt, 'active', JSON.stringify({ fivesim_order_id: fivesimOrderId })]
+        );
+        const numberId = numResult.id;
+
+        await db.run(
+            'INSERT INTO transactions (user_id, type, category, description, amount, reference, meta) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [req.user.id, 'debit', 'number', `Virtual number purchase - ${country.name} (${serviceName})`, chargePrice, ref, JSON.stringify({ country_id, number: phoneNumber, service: serviceName, fivesim_order_id: fivesimOrderId })]
+        );
+
+        await db.run(
+            'INSERT INTO notifications (user_id, type, title, message) VALUES ($1, $2, $3, $4)',
+            [req.user.id, 'success', 'Number Purchased', `Your ${country.name} number ${phoneNumber} is ready!`]
+        );
+
+        // Sandbox: simulate SMS after delay
+        if (!is5simEnabled()) {
+            const randomDelay = 3000 + Math.floor(Math.random() * 5000);
+            setTimeout(async () => {
+                try {
+                    const template = SMS_TEMPLATES[Math.floor(Math.random() * SMS_TEMPLATES.length)];
+                    const code = generateOtp();
+                    const message = template.message.replace('{code}', code);
+
+                    await db.run(
+                        'INSERT INTO sms_messages (number_id, sender, message, code) VALUES ($1, $2, $3, $4)',
+                        [numberId, template.sender, message, code]
+                    );
+                    await db.run(
+                        'INSERT INTO notifications (user_id, type, title, message) VALUES ($1, $2, $3, $4)',
+                        [req.user.id, 'info', 'New SMS Received', `New message from ${template.sender} on ${phoneNumber}`]
+                    );
+                } catch (e) {
+                    // Number may have expired
+                }
+            }, randomDelay);
+        }
+
+        const updatedUser = await db.get('SELECT wallet_balance FROM users WHERE id = $1', [req.user.id]);
+
+        res.json({
+            message: 'Number purchased successfully',
+            number: {
+                id: numberId,
+                number: phoneNumber,
+                country: country.name,
+                country_code: country_id,
+                service: serviceName,
+                type: type || 'temporary',
+                price,
+                expires_at: expiresAt,
+                fivesim_order_id: fivesimOrderId
+            },
+            balance: parseFloat(updatedUser.wallet_balance)
+        });
+    } catch (err) {
+        console.error('Purchase error:', err.message);
+        res.status(500).json({ error: 'Number purchase failed' });
     }
-
-    const updatedUser = db.prepare('SELECT wallet_balance FROM users WHERE id = ?').get(req.user.id);
-
-    res.json({
-        message: 'Number purchased successfully',
-        number: {
-            id: numberId,
-            number: phoneNumber,
-            country: country.name,
-            country_code: country_id,
-            service: serviceName,
-            type: type || 'temporary',
-            price,
-            expires_at: expiresAt,
-            fivesim_order_id: fivesimOrderId
-        },
-        balance: updatedUser.wallet_balance
-    });
 });
 
 // GET /api/numbers/:id/sms - Check for SMS (polls 5sim if configured)
 router.get('/:id/sms', authenticate, async (req, res) => {
     const numberId = parseInt(req.params.id);
 
-    // Verify ownership
-    const num = db.prepare('SELECT * FROM virtual_numbers WHERE id = ? AND user_id = ?').get(numberId, req.user.id);
-    if (!num) {
-        return res.status(404).json({ error: 'Number not found' });
-    }
+    try {
+        const num = await db.get('SELECT * FROM virtual_numbers WHERE id = $1 AND user_id = $2', [numberId, req.user.id]);
+        if (!num) {
+            return res.status(404).json({ error: 'Number not found' });
+        }
 
-    const meta = num.meta ? JSON.parse(num.meta) : {};
-    const fivesimOrderId = meta.fivesim_order_id;
+        const meta = num.meta ? JSON.parse(num.meta) : {};
+        const fivesimOrderId = meta.fivesim_order_id;
 
-    // If 5sim is active and we have an order ID, poll for new SMS
-    if (is5simEnabled() && fivesimOrderId) {
-        try {
-            const order = await fivesim.checkOrder(fivesimOrderId);
+        if (is5simEnabled() && fivesimOrderId) {
+            try {
+                const order = await fivesim.checkOrder(fivesimOrderId);
 
-            // Update status in our DB
-            let localStatus = num.status;
-            if (order.status === 'RECEIVED' || order.status === 'FINISHED') {
-                localStatus = 'active';
-            } else if (order.status === 'CANCELED' || order.status === 'BANNED' || order.status === 'TIMEOUT') {
-                localStatus = 'expired';
-            }
-            if (localStatus !== num.status) {
-                db.prepare('UPDATE virtual_numbers SET status = ? WHERE id = ?').run(localStatus, numberId);
-            }
+                let localStatus = num.status;
+                if (order.status === 'RECEIVED' || order.status === 'FINISHED') {
+                    localStatus = 'active';
+                } else if (order.status === 'CANCELED' || order.status === 'BANNED' || order.status === 'TIMEOUT') {
+                    localStatus = 'expired';
+                }
+                if (localStatus !== num.status) {
+                    await db.run('UPDATE virtual_numbers SET status = $1 WHERE id = $2', [localStatus, numberId]);
+                }
 
-            // Store any new SMS from 5sim
-            if (order.sms && order.sms.length > 0) {
-                for (const sms of order.sms) {
-                    // Check if we already stored this SMS (by message text + created_at)
-                    const existing = db.prepare(
-                        'SELECT id FROM sms_messages WHERE number_id = ? AND message = ?'
-                    ).get(numberId, sms.text);
-
-                    if (!existing) {
-                        db.prepare(
-                            'INSERT INTO sms_messages (number_id, sender, message, code) VALUES (?, ?, ?, ?)'
-                        ).run(numberId, sms.sender || 'Unknown', sms.text, sms.code || null);
-
-                        // Notify user
-                        db.prepare(
-                            'INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)'
-                        ).run(
-                            req.user.id, 'info', 'SMS Received',
-                            `New message on ${num.number}: ${sms.text.substring(0, 50)}${sms.text.length > 50 ? '...' : ''}`
+                if (order.sms && order.sms.length > 0) {
+                    for (const sms of order.sms) {
+                        const existing = await db.get(
+                            'SELECT id FROM sms_messages WHERE number_id = $1 AND message = $2',
+                            [numberId, sms.text]
                         );
+                        if (!existing) {
+                            await db.run(
+                                'INSERT INTO sms_messages (number_id, sender, message, code) VALUES ($1, $2, $3, $4)',
+                                [numberId, sms.sender || 'Unknown', sms.text, sms.code || null]
+                            );
+                            await db.run(
+                                'INSERT INTO notifications (user_id, type, title, message) VALUES ($1, $2, $3, $4)',
+                                [req.user.id, 'info', 'SMS Received', `New message on ${num.number}: ${sms.text.substring(0, 50)}${sms.text.length > 50 ? '...' : ''}`]
+                            );
+                        }
                     }
                 }
+            } catch (err) {
+                console.error('5sim check error:', err.message);
             }
-        } catch (err) {
-            console.error('5sim check error:', err.message);
-            // Continue - still return local messages
         }
+
+        const messages = await db.query(
+            'SELECT * FROM sms_messages WHERE number_id = $1 ORDER BY created_at DESC',
+            [numberId]
+        );
+
+        res.json({ number: num, messages });
+    } catch (err) {
+        console.error('SMS check error:', err.message);
+        res.status(500).json({ error: 'Failed to check SMS' });
     }
-
-    // Return messages from our DB
-    const messages = db.prepare(
-        'SELECT * FROM sms_messages WHERE number_id = ? ORDER BY created_at DESC'
-    ).all(numberId);
-
-    res.json({ number: num, messages });
 });
 
 // POST /api/numbers/:id/finish - Mark number as done (finish 5sim order)
 router.post('/:id/finish', authenticate, async (req, res) => {
     const numberId = parseInt(req.params.id);
 
-    const num = db.prepare('SELECT * FROM virtual_numbers WHERE id = ? AND user_id = ?').get(numberId, req.user.id);
-    if (!num) {
-        return res.status(404).json({ error: 'Number not found' });
-    }
-
-    const meta = num.meta ? JSON.parse(num.meta) : {};
-
-    if (is5simEnabled() && meta.fivesim_order_id) {
-        try {
-            await fivesim.finishOrder(meta.fivesim_order_id);
-        } catch (err) {
-            console.error('5sim finish error:', err.message);
+    try {
+        const num = await db.get('SELECT * FROM virtual_numbers WHERE id = $1 AND user_id = $2', [numberId, req.user.id]);
+        if (!num) {
+            return res.status(404).json({ error: 'Number not found' });
         }
+
+        const meta = num.meta ? JSON.parse(num.meta) : {};
+
+        if (is5simEnabled() && meta.fivesim_order_id) {
+            try {
+                await fivesim.finishOrder(meta.fivesim_order_id);
+            } catch (err) {
+                console.error('5sim finish error:', err.message);
+            }
+        }
+
+        await db.run('UPDATE virtual_numbers SET status = $1 WHERE id = $2', ['completed', numberId]);
+
+        res.json({ message: 'Number marked as completed' });
+    } catch (err) {
+        console.error('Finish error:', err.message);
+        res.status(500).json({ error: 'Failed to finish number' });
     }
-
-    db.prepare('UPDATE virtual_numbers SET status = ? WHERE id = ?').run('completed', numberId);
-
-    res.json({ message: 'Number marked as completed' });
 });
 
 // POST /api/numbers/:id/cancel - Cancel number (refund if no SMS)
 router.post('/:id/cancel', authenticate, async (req, res) => {
     const numberId = parseInt(req.params.id);
 
-    const num = db.prepare('SELECT * FROM virtual_numbers WHERE id = ? AND user_id = ?').get(numberId, req.user.id);
-    if (!num) {
-        return res.status(404).json({ error: 'Number not found' });
-    }
-
-    if (num.status !== 'active') {
-        return res.status(400).json({ error: 'Can only cancel active numbers' });
-    }
-
-    const meta = num.meta ? JSON.parse(num.meta) : {};
-    let refunded = false;
-
-    if (is5simEnabled() && meta.fivesim_order_id) {
-        try {
-            await fivesim.cancelOrder(meta.fivesim_order_id);
-            refunded = true;
-        } catch (err) {
-            console.error('5sim cancel error:', err.message);
-            // If cancel fails (e.g. SMS already received), don't refund
-            return res.status(400).json({ error: 'Cannot cancel - SMS may already be received. Try finishing instead.' });
+    try {
+        const num = await db.get('SELECT * FROM virtual_numbers WHERE id = $1 AND user_id = $2', [numberId, req.user.id]);
+        if (!num) {
+            return res.status(404).json({ error: 'Number not found' });
         }
-    } else {
-        // Sandbox mode - check if no SMS received
-        const smsCount = db.prepare('SELECT COUNT(*) as count FROM sms_messages WHERE number_id = ?').get(numberId);
-        if (smsCount.count === 0) {
-            refunded = true;
-        }
-    }
 
-    const cancelTxn = db.transaction(() => {
-        db.prepare('UPDATE virtual_numbers SET status = ? WHERE id = ?').run('cancelled', numberId);
+        if (num.status !== 'active') {
+            return res.status(400).json({ error: 'Can only cancel active numbers' });
+        }
+
+        const meta = num.meta ? JSON.parse(num.meta) : {};
+        let refunded = false;
+
+        if (is5simEnabled() && meta.fivesim_order_id) {
+            try {
+                await fivesim.cancelOrder(meta.fivesim_order_id);
+                refunded = true;
+            } catch (err) {
+                console.error('5sim cancel error:', err.message);
+                return res.status(400).json({ error: 'Cannot cancel - SMS may already be received. Try finishing instead.' });
+            }
+        } else {
+            const smsCount = await db.get('SELECT COUNT(*) as count FROM sms_messages WHERE number_id = $1', [numberId]);
+            if (parseInt(smsCount.count) === 0) {
+                refunded = true;
+            }
+        }
+
+        await db.run('UPDATE virtual_numbers SET status = $1 WHERE id = $2', ['cancelled', numberId]);
 
         if (refunded) {
-            db.prepare('UPDATE users SET wallet_balance = wallet_balance + ? WHERE id = ?').run(num.price, req.user.id);
-
-            db.prepare(
-                'INSERT INTO transactions (user_id, type, category, description, amount, reference, meta) VALUES (?, ?, ?, ?, ?, ?, ?)'
-            ).run(
-                req.user.id, 'credit', 'refund',
-                `Refund - cancelled ${num.country} number`,
-                num.price, 'REF-' + Date.now(),
-                JSON.stringify({ original_number: num.number })
+            await db.run('UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2', [parseFloat(num.price), req.user.id]);
+            await db.run(
+                'INSERT INTO transactions (user_id, type, category, description, amount, reference, meta) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+                [req.user.id, 'credit', 'refund', `Refund - cancelled ${num.country} number`, parseFloat(num.price), 'REF-' + Date.now(), JSON.stringify({ original_number: num.number })]
             );
-
-            db.prepare(
-                'INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)'
-            ).run(req.user.id, 'info', 'Number Cancelled', `₦${num.price.toLocaleString()} refunded for cancelled ${num.country} number.`);
+            await db.run(
+                'INSERT INTO notifications (user_id, type, title, message) VALUES ($1, $2, $3, $4)',
+                [req.user.id, 'info', 'Number Cancelled', `₦${parseFloat(num.price).toLocaleString()} refunded for cancelled ${num.country} number.`]
+            );
         }
-    });
 
-    cancelTxn();
+        const updatedUser = await db.get('SELECT wallet_balance FROM users WHERE id = $1', [req.user.id]);
 
-    const updatedUser = db.prepare('SELECT wallet_balance FROM users WHERE id = ?').get(req.user.id);
-
-    res.json({
-        message: refunded ? 'Number cancelled and refunded' : 'Number cancelled',
-        refunded,
-        balance: updatedUser.wallet_balance
-    });
+        res.json({
+            message: refunded ? 'Number cancelled and refunded' : 'Number cancelled',
+            refunded,
+            balance: parseFloat(updatedUser.wallet_balance)
+        });
+    } catch (err) {
+        console.error('Cancel error:', err.message);
+        res.status(500).json({ error: 'Failed to cancel number' });
+    }
 });
 
 // GET /api/numbers/my
-router.get('/my', authenticate, (req, res) => {
-    const numbers = db.prepare(
-        'SELECT * FROM virtual_numbers WHERE user_id = ? ORDER BY created_at DESC'
-    ).all(req.user.id);
-
-    res.json({ numbers });
+router.get('/my', authenticate, async (req, res) => {
+    try {
+        const numbers = await db.query(
+            'SELECT * FROM virtual_numbers WHERE user_id = $1 ORDER BY created_at DESC',
+            [req.user.id]
+        );
+        res.json({ numbers });
+    } catch (err) {
+        console.error('My numbers error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch numbers' });
+    }
 });
 
 module.exports = router;

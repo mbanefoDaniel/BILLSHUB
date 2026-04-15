@@ -1,4 +1,4 @@
-// ===== Nefotech Admin Panel =====
+ // ===== Nefotech Admin Panel =====
 const API_BASE = '/api/admin';
 let token = sessionStorage.getItem('admin_token');
 let adminUser = JSON.parse(sessionStorage.getItem('admin_user') || 'null');
