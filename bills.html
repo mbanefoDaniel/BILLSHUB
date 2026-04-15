@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay Bills - Nefotech</title>
+    <meta name="description" content="Pay for electricity, airtime, data, cable TV, betting & education instantly in Naira. IKEDC, MTN, DStv, Bet9ja and more.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo"><i class="fas fa-bolt"></i> Nefotech</a>
+            <button class="nav-toggle"><i class="fas fa-bars"></i></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="bills.html" class="active">Pay Bills</a></li>
+                <li><a href="numbers.html">Virtual Numbers</a></li>
+                <li><a href="login.html" class="btn btn-outline-light btn-sm">Sign In</a></li>
+                <li><a href="register.html" class="btn btn-primary btn-sm">Sign Up</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header" style="background: linear-gradient(135deg, rgba(10,10,35,0.9), rgba(30,30,80,0.85)), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1920&q=80') center/cover no-repeat;">
+        <div class="container">
+            <h1><i class="fas fa-receipt"></i> Pay Bills</h1>
+            <p>Pay for electricity, airtime, data, cable TV, betting & education — instantly in Naira</p>
+        </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="bill-categories">
+        <div class="container">
+            <div class="categories-tabs">
+                <button class="tab-btn active" data-category="all"><i class="fas fa-th-large"></i> All</button>
+                <button class="tab-btn" data-category="electricity"><i class="fas fa-bolt"></i> Electricity</button>
+                <button class="tab-btn" data-category="airtime"><i class="fas fa-signal"></i> Airtime</button>
+                <button class="tab-btn" data-category="data"><i class="fas fa-wifi"></i> Data</button>
+                <button class="tab-btn" data-category="tv"><i class="fas fa-tv"></i> Cable TV</button>
+                <button class="tab-btn" data-category="betting"><i class="fas fa-futbol"></i> Betting</button>
+                <button class="tab-btn" data-category="education"><i class="fas fa-graduation-cap"></i> Education</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bill Payment Layout -->
+    <section class="bill-payment">
+        <div class="container">
+            <div class="payment-layout">
+                <!-- Providers Panel -->
+                <div class="providers-panel">
+                    <h3><i class="fas fa-list"></i> Select Provider</h3>
+                    <div class="provider-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="providerSearch" placeholder="Search providers...">
+                    </div>
+                    <div class="providers-grid">
+                        <!-- Electricity -->
+                        <div class="provider-card" data-category="electricity" data-provider="IKEDC (Ikeja Electric)" data-provider-id="ikedc">
+                            <div class="provider-icon elec"><i class="fas fa-bolt"></i></div>
+                            <span>IKEDC (Ikeja Electric)</span>
+                        </div>
+                        <div class="provider-card" data-category="electricity" data-provider="EKEDC (Eko Electric)" data-provider-id="ekedc">
+                            <div class="provider-icon elec"><i class="fas fa-plug"></i></div>
+                            <span>EKEDC (Eko Electric)</span>
+                        </div>
+                        <div class="provider-card" data-category="electricity" data-provider="AEDC (Abuja Electric)" data-provider-id="aedc">
+                            <div class="provider-icon elec"><i class="fas fa-bolt"></i></div>
+                            <span>AEDC (Abuja Electric)</span>
+                        </div>
+                        <div class="provider-card" data-category="electricity" data-provider="PHEDC (Port Harcourt)" data-provider-id="phedc">
+                            <div class="provider-icon elec"><i class="fas fa-plug"></i></div>
+                            <span>PHEDC (Port Harcourt)</span>
+                        </div>
+                        <div class="provider-card" data-category="electricity" data-provider="IBEDC (Ibadan Electric)" data-provider-id="ibedc">
+                            <div class="provider-icon elec"><i class="fas fa-bolt"></i></div>
+                            <span>IBEDC (Ibadan Electric)</span>
+                        </div>
+                        <div class="provider-card" data-category="electricity" data-provider="KEDCO (Kano Electric)" data-provider-id="kedco">
+                            <div class="provider-icon elec"><i class="fas fa-plug"></i></div>
+                            <span>KEDCO (Kano Electric)</span>
+                        </div>
+
+                        <!-- Airtime -->
+                        <div class="provider-card" data-category="airtime" data-provider="MTN Nigeria" data-provider-id="mtn">
+                            <div class="provider-icon phn"><i class="fas fa-signal"></i></div>
+                            <span>MTN Nigeria</span>
+                        </div>
+                        <div class="provider-card" data-category="airtime" data-provider="Airtel Nigeria" data-provider-id="airtel">
+                            <div class="provider-icon phn"><i class="fas fa-signal"></i></div>
+                            <span>Airtel Nigeria</span>
+                        </div>
+                        <div class="provider-card" data-category="airtime" data-provider="Glo Mobile" data-provider-id="glo">
+                            <div class="provider-icon phn"><i class="fas fa-signal"></i></div>
+                            <span>Glo Mobile</span>
+                        </div>
+                        <div class="provider-card" data-category="airtime" data-provider="9mobile" data-provider-id="9mobile">
+                            <div class="provider-icon phn"><i class="fas fa-signal"></i></div>
+                            <span>9mobile</span>
+                        </div>
+
+                        <!-- Data -->
+                        <div class="provider-card" data-category="data" data-provider="MTN Data" data-provider-id="mtn-data">
+                            <div class="provider-icon inet"><i class="fas fa-wifi"></i></div>
+                            <span>MTN Data</span>
+                        </div>
+                        <div class="provider-card" data-category="data" data-provider="Airtel Data" data-provider-id="airtel-data">
+                            <div class="provider-icon inet"><i class="fas fa-wifi"></i></div>
+                            <span>Airtel Data</span>
+                        </div>
+                        <div class="provider-card" data-category="data" data-provider="Glo Data" data-provider-id="glo-data">
+                            <div class="provider-icon inet"><i class="fas fa-wifi"></i></div>
+                            <span>Glo Data</span>
+                        </div>
+                        <div class="provider-card" data-category="data" data-provider="9mobile Data" data-provider-id="9mobile-data">
+                            <div class="provider-icon inet"><i class="fas fa-wifi"></i></div>
+                            <span>9mobile Data</span>
+                        </div>
+                        <div class="provider-card" data-category="data" data-provider="Spectranet" data-provider-id="spectranet">
+                            <div class="provider-icon inet"><i class="fas fa-globe"></i></div>
+                            <span>Spectranet</span>
+                        </div>
+                        <div class="provider-card" data-category="data" data-provider="Smile 4G" data-provider-id="smile">
+                            <div class="provider-icon inet"><i class="fas fa-globe"></i></div>
+                            <span>Smile 4G</span>
+                        </div>
+
+                        <!-- TV -->
+                        <div class="provider-card" data-category="tv" data-provider="DStv" data-provider-id="dstv">
+                            <div class="provider-icon tvp"><i class="fas fa-tv"></i></div>
+                            <span>DStv</span>
+                        </div>
+                        <div class="provider-card" data-category="tv" data-provider="GOtv" data-provider-id="gotv">
+                            <div class="provider-icon tvp"><i class="fas fa-tv"></i></div>
+                            <span>GOtv</span>
+                        </div>
+                        <div class="provider-card" data-category="tv" data-provider="StarTimes" data-provider-id="startimes">
+                            <div class="provider-icon tvp"><i class="fas fa-satellite-dish"></i></div>
+                            <span>StarTimes</span>
+                        </div>
+                        <div class="provider-card" data-category="tv" data-provider="Showmax" data-provider-id="showmax">
+                            <div class="provider-icon tvp"><i class="fas fa-play"></i></div>
+                            <span>Showmax</span>
+                        </div>
+
+                        <!-- Betting -->
+                        <div class="provider-card" data-category="betting" data-provider="Bet9ja" data-provider-id="bet9ja">
+                            <div class="provider-icon" style="background:rgba(0,184,148,0.15);color:var(--success)"><i class="fas fa-futbol"></i></div>
+                            <span>Bet9ja</span>
+                        </div>
+                        <div class="provider-card" data-category="betting" data-provider="SportyBet" data-provider-id="sportybet">
+                            <div class="provider-icon" style="background:rgba(0,184,148,0.15);color:var(--success)"><i class="fas fa-futbol"></i></div>
+                            <span>SportyBet</span>
+                        </div>
+                        <div class="provider-card" data-category="betting" data-provider="BetKing" data-provider-id="betking">
+                            <div class="provider-icon" style="background:rgba(0,184,148,0.15);color:var(--success)"><i class="fas fa-futbol"></i></div>
+                            <span>BetKing</span>
+                        </div>
+                        <div class="provider-card" data-category="betting" data-provider="1xBet" data-provider-id="1xbet">
+                            <div class="provider-icon" style="background:rgba(0,184,148,0.15);color:var(--success)"><i class="fas fa-futbol"></i></div>
+                            <span>1xBet</span>
+                        </div>
+
+                        <!-- Education -->
+                        <div class="provider-card" data-category="education" data-provider="WAEC Result Checker" data-provider-id="waec">
+                            <div class="provider-icon ins"><i class="fas fa-graduation-cap"></i></div>
+                            <span>WAEC Result Checker</span>
+                        </div>
+                        <div class="provider-card" data-category="education" data-provider="JAMB" data-provider-id="jamb">
+                            <div class="provider-icon ins"><i class="fas fa-graduation-cap"></i></div>
+                            <span>JAMB</span>
+                        </div>
+                        <div class="provider-card" data-category="education" data-provider="NECO" data-provider-id="neco">
+                            <div class="provider-icon ins"><i class="fas fa-book"></i></div>
+                            <span>NECO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Form Panel -->
+                <div class="payment-form-panel">
+                    <div id="selectedProviderDisplay" class="empty-state">
+                        <i class="fas fa-hand-pointer"></i>
+                        <h3>Select a Provider</h3>
+                        <p>Choose a service provider from the list to continue with your payment</p>
+                    </div>
+
+                    <form id="billPaymentForm" style="display:none">
+                        <div class="form-header">
+                            <h3>Pay <span id="formProviderName"></span></h3>
+                            <button type="button" id="changeProvider" class="btn-change"><i class="fas fa-arrow-left"></i> Change</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="accountNumber">Account Number</label>
+                            <div class="input-with-btn">
+                                <input type="text" id="accountNumber" required placeholder="Enter account number">
+                            </div>
+                        </div>
+
+                        <!-- Meter Type (electricity only) -->
+                        <div class="form-group" id="meterTypeSection" style="display:none;">
+                            <label for="meterType">Meter Type</label>
+                            <select id="meterType">
+                                <option value="prepaid">Prepaid</option>
+                                <option value="postpaid">Postpaid</option>
+                            </select>
+                        </div>
+
+                        <!-- Verify Section (electricity & TV) -->
+                        <div id="verifySection" style="display:none;">
+                            <button type="button" id="verifyBtn" class="btn btn-outline btn-sm">
+                                <i class="fas fa-search"></i> Verify Meter/Smartcard
+                            </button>
+                            <div id="verifyResult" style="display:none;margin-top:8px;"></div>
+                        </div>
+
+                        <!-- Data Plan / TV Package Selector -->
+                        <div class="form-group" id="planSection" style="display:none;">
+                            <label for="planSelect">Select Plan / Package</label>
+                            <select id="planSelect">
+                                <option value="">Select a plan</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="amount">Amount (₦)</label>
+                            <input type="number" id="amount" required placeholder="Enter amount" min="100" step="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentMethod">Payment Method</label>
+                            <select id="paymentMethod">
+                                <option value="wallet">Wallet Balance</option>
+                            </select>
+                        </div>
+
+                        <div class="payment-summary">
+                            <div class="summary-row"><span>Amount</span><span id="summaryAmount">₦0.00</span></div>
+                            <div class="summary-row"><span>Service Fee</span><span id="summaryFee">₦100.00</span></div>
+                            <div class="summary-row total"><span>Total</span><span id="summaryTotal">₦100.00</span></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">
+                            <i class="fas fa-paper-plane"></i> Pay Now
+                        </button>
+                        <p class="security-note"><i class="fas fa-lock"></i> Your payment is secured with 256-bit encryption</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Transactions -->
+    <section class="recent-transactions">
+        <div class="container">
+            <h2><i class="fas fa-history"></i> Recent Transactions</h2>
+            <div class="transactions-table-wrapper">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Provider</th>
+                            <th>Account</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:40px;">Sign in to view your transaction history</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo"><i class="fas fa-bolt"></i> Nefotech</a>
+                    <p>Nigeria's most reliable platform for bill payments and virtual number services.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Services</h4>
+                    <a href="bills.html">Pay Electricity</a>
+                    <a href="bills.html">Buy Airtime</a>
+                    <a href="bills.html">Buy Data</a>
+                    <a href="numbers.html">Virtual Numbers</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <a href="#">About Us</a>
+                    <a href="index.html#contact">Contact</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <a href="terms.html">Terms of Service</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Nefotech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

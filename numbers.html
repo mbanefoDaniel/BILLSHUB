@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Numbers - Nefotech</title>
+    <meta name="description" content="Get instant virtual phone numbers from 10+ countries for SMS verification. WhatsApp, Google, Telegram and more — paid in Naira.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo"><i class="fas fa-bolt"></i> Nefotech</a>
+            <button class="nav-toggle"><i class="fas fa-bars"></i></button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="bills.html">Pay Bills</a></li>
+                <li><a href="numbers.html" class="active">Virtual Numbers</a></li>
+                <li><a href="login.html" class="btn btn-outline-light btn-sm">Sign In</a></li>
+                <li><a href="register.html" class="btn btn-primary btn-sm">Sign Up</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header page-header-numbers" style="background: linear-gradient(135deg, rgba(10,10,35,0.88), rgba(30,30,80,0.88)), url('https://images.unsplash.com/photo-1596558450268-9c27524ba856?w=1920&q=80') center/cover no-repeat;">
+        <div class="container">
+            <h1><i class="fas fa-phone-volume"></i> Virtual Numbers</h1>
+            <p>Get instant phone numbers from 10+ countries for SMS verification — paid in Naira</p>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="numbers-filter">
+        <div class="container">
+            <div class="filter-bar">
+                <div class="filter-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="countrySearch" placeholder="Search by country...">
+                </div>
+                <div class="filter-options">
+                    <select id="serviceFilter">
+                        <option value="all">All Services</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="google">Google</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="instagram">Instagram</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Numbers Listing -->
+    <section class="numbers-listing">
+        <div class="container">
+            <div class="numbers-grid">
+                <!-- Nigeria -->
+                <div class="number-card" data-country="nigeria" data-services="whatsapp,google,telegram,facebook">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇳🇬</span>
+                        <div class="country-info">
+                            <h3>Nigeria</h3>
+                            <span class="country-code">+234</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag"><i class="fab fa-telegram"></i> Telegram</span>
+                            <span class="service-tag more">+5 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦1,500</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="NG" data-type="temporary" data-price="1500">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- USA -->
+                <div class="number-card" data-country="united states" data-services="whatsapp,google,telegram,facebook,twitter,instagram,amazon,paypal">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇺🇸</span>
+                        <div class="country-info">
+                            <h3>United States</h3>
+                            <span class="country-code">+1</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag"><i class="fab fa-amazon"></i> Amazon</span>
+                            <span class="service-tag"><i class="fab fa-paypal"></i> PayPal</span>
+                            <span class="service-tag more">+8 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦4,500</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="US" data-type="temporary" data-price="4500">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UK -->
+                <div class="number-card" data-country="united kingdom" data-services="whatsapp,google,telegram,facebook,twitter">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇬🇧</span>
+                        <div class="country-info">
+                            <h3>United Kingdom</h3>
+                            <span class="country-code">+44</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag"><i class="fab fa-telegram"></i> Telegram</span>
+                            <span class="service-tag more">+4 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦5,200</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="UK" data-type="temporary" data-price="5200">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- India -->
+                <div class="number-card" data-country="india" data-services="whatsapp,google,telegram,facebook">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇮🇳</span>
+                        <div class="country-info">
+                            <h3>India</h3>
+                            <span class="country-code">+91</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag more">+3 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦2,200</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="IN" data-type="temporary" data-price="2200">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Germany -->
+                <div class="number-card" data-country="germany" data-services="whatsapp,google,telegram">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇩🇪</span>
+                        <div class="country-info">
+                            <h3>Germany</h3>
+                            <span class="country-code">+49</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag more">+3 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦5,800</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="DE" data-type="temporary" data-price="5800">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Canada -->
+                <div class="number-card" data-country="canada" data-services="whatsapp,google,telegram,facebook">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇨🇦</span>
+                        <div class="country-info">
+                            <h3>Canada</h3>
+                            <span class="country-code">+1</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag more">+3 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦4,500</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="CA" data-type="temporary" data-price="4500">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brazil -->
+                <div class="number-card" data-country="brazil" data-services="whatsapp,google,telegram">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇧🇷</span>
+                        <div class="country-info">
+                            <h3>Brazil</h3>
+                            <span class="country-code">+55</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-telegram"></i> Telegram</span>
+                            <span class="service-tag more">+2 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦3,000</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="BR" data-type="temporary" data-price="3000">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- South Africa -->
+                <div class="number-card" data-country="south africa" data-services="whatsapp,google,telegram">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇿🇦</span>
+                        <div class="country-info">
+                            <h3>South Africa</h3>
+                            <span class="country-code">+27</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag more">+2 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦2,800</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="ZA" data-type="temporary" data-price="2800">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ghana -->
+                <div class="number-card" data-country="ghana" data-services="whatsapp,google,telegram">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇬🇭</span>
+                        <div class="country-info">
+                            <h3>Ghana</h3>
+                            <span class="country-code">+233</span>
+                        </div>
+                        <span class="availability available"><i class="fas fa-circle"></i> Available</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-google"></i> Google</span>
+                            <span class="service-tag more">+2 more</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦2,000</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="GH" data-type="temporary" data-price="2000">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Russia -->
+                <div class="number-card" data-country="russia" data-services="whatsapp,telegram">
+                    <div class="number-card-header">
+                        <span class="country-flag">🇷🇺</span>
+                        <div class="country-info">
+                            <h3>Russia</h3>
+                            <span class="country-code">+7</span>
+                        </div>
+                        <span class="availability limited"><i class="fas fa-circle"></i> Limited</span>
+                    </div>
+                    <div class="number-card-body">
+                        <div class="number-services">
+                            <span class="service-tag"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                            <span class="service-tag"><i class="fab fa-telegram"></i> Telegram</span>
+                        </div>
+                        <div class="number-options">
+                            <div class="number-option">
+                                <div class="option-details"><span class="option-type">Temporary</span><span class="option-duration">20 minutes</span></div>
+                                <span class="option-price">₦3,000</span>
+                                <button class="btn btn-primary btn-sm buy-btn" data-country="RU" data-type="temporary" data-price="3000">Buy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Purchase Modal -->
+    <div class="modal-overlay" id="purchaseModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-phone-alt"></i> Purchase Number</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="purchase-summary">
+                    <div class="purchase-detail"><span>Country</span><strong id="modalCountry">-</strong></div>
+                    <div class="purchase-detail"><span>Type</span><strong id="modalType">-</strong></div>
+                    <div class="purchase-detail"><span>Price</span><strong id="modalPrice">-</strong></div>
+                </div>
+                <form id="purchaseForm">
+                    <div class="form-group">
+                        <label for="purchaseService">Service</label>
+                        <select id="purchaseService">
+                            <option value="any">Any Service</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="google">Google</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="twitter/X">Twitter/X</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="amazon">Amazon</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="purchasePayment">Payment Method</label>
+                        <select id="purchasePayment">
+                            <option value="wallet">Wallet Balance</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">
+                        <i class="fas fa-shopping-cart"></i> Purchase Number
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="logo"><i class="fas fa-bolt"></i> Nefotech</a>
+                    <p>Nigeria's most reliable platform for bill payments and virtual number services.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Services</h4>
+                    <a href="bills.html">Pay Electricity</a>
+                    <a href="bills.html">Buy Airtime</a>
+                    <a href="numbers.html">Virtual Numbers</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <a href="#">About Us</a>
+                    <a href="index.html#contact">Contact</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <a href="terms.html">Terms of Service</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Nefotech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

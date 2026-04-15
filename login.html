@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Nefotech</title>
+    <meta name="description" content="Sign in to your Nefotech account to pay bills and manage virtual numbers.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo"><i class="fas fa-bolt"></i> Nefotech</a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="bills.html">Pay Bills</a></li>
+                <li><a href="numbers.html">Virtual Numbers</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="auth-page">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to your Nefotech account</p>
+                </div>
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <div class="input-icon">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="loginEmail" required placeholder="your@email.com" autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <div class="input-icon">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="loginPassword" required placeholder="Enter your password" autocomplete="current-password" minlength="6">
+                            <button type="button" class="toggle-password" tabindex="-1"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe"> Remember me
+                        </label>
+                        <a href="reset-password.html" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <div id="loginError" class="form-error" style="display:none;"></div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                </form>
+                <div class="auth-divider"><span>or continue with</span></div>
+                <div class="social-auth">
+                    <button class="btn-social google" onclick="alert('Google sign-in coming soon!')"><i class="fab fa-google"></i> Google</button>
+                    <button class="btn-social apple" onclick="alert('Apple sign-in coming soon!')"><i class="fab fa-apple"></i> Apple</button>
+                </div>
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="register.html">Create one</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

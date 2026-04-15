@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Nefotech</title>
+    <meta name="description" content="Manage your Nefotech wallet, view transactions, and track your bill payments.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo"><i class="fas fa-bolt"></i> Nefotech</a>
+            <button class="nav-toggle" aria-label="Toggle navigation"><i class="fas fa-bars"></i></button>
+            <ul class="nav-links" id="navLinks"></ul>
+        </div>
+    </nav>
+
+    <!-- Dashboard -->
+    <section class="dashboard">
+        <div class="container">
+            <div class="dash-header">
+                <div>
+                    <h1 id="dashGreeting">Good morning!</h1>
+                    <p class="dash-subtitle">Here's your account overview</p>
+                </div>
+                <div class="dash-actions">
+                    <button class="btn btn-primary" id="addFundsBtn">
+                        <i class="fas fa-plus"></i> Add Funds
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="dash-stats">
+                <div class="dash-stat-card wallet-card">
+                    <div class="stat-card-icon"><i class="fas fa-wallet"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-label">Wallet Balance</span>
+                        <span class="stat-card-value" id="walletBalance">₦0</span>
+                    </div>
+                    <button class="stat-card-action" id="topUpBtn">Top Up</button>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="stat-card-icon bills-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-label">Bills Paid</span>
+                        <span class="stat-card-value" id="billsPaid">0</span>
+                    </div>
+                    <a href="bills.html" class="stat-card-action">Pay Bill</a>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="stat-card-icon numbers-icon"><i class="fas fa-phone"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-label">Active Numbers</span>
+                        <span class="stat-card-value" id="activeNumbers">0</span>
+                    </div>
+                    <a href="numbers.html" class="stat-card-action">Buy Number</a>
+                </div>
+                <div class="dash-stat-card">
+                    <div class="stat-card-icon spent-icon"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-card-info">
+                        <span class="stat-card-label">Total Spent</span>
+                        <span class="stat-card-value" id="totalSpent">₦0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dash-grid">
+                <!-- Recent Transactions -->
+                <div class="dash-panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-history"></i> Recent Transactions</h3>
+                        <a href="#" class="panel-link" id="viewAllTxnBtn">View All</a>
+                    </div>
+                    <div class="panel-body" id="recentTransactions">
+                        <div class="empty-panel">
+                            <i class="fas fa-receipt"></i>
+                            <p>No transactions yet</p>
+                            <a href="bills.html" class="btn btn-primary btn-sm">Pay a Bill</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Virtual Numbers -->
+                <div class="dash-panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-phone-volume"></i> My Numbers</h3>
+                        <a href="numbers.html" class="panel-link">Get More</a>
+                    </div>
+                    <div class="panel-body" id="myNumbers">
+                        <div class="empty-panel">
+                            <i class="fas fa-sim-card"></i>
+                            <p>No virtual numbers yet</p>
+                            <a href="numbers.html" class="btn btn-primary btn-sm">Buy a Number</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="dash-panel full-width">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-bell"></i> Notifications <span class="badge" id="notifBadge" style="display:none;">0</span></h3>
+                        <button class="panel-link" id="markAllReadBtn">Mark all read</button>
+                    </div>
+                    <div class="panel-body" id="notificationsList">
+                        <div class="empty-panel">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No notifications</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="quick-actions-grid">
+                    <a href="bills.html" class="quick-action-card">
+                        <div class="qa-icon"><i class="fas fa-bolt"></i></div>
+                        <span>Pay Electricity</span>
+                    </a>
+                    <a href="bills.html" class="quick-action-card">
+                        <div class="qa-icon water"><i class="fas fa-tv"></i></div>
+                        <span>Pay TV Sub</span>
+                    </a>
+                    <a href="bills.html" class="quick-action-card">
+                        <div class="qa-icon internet"><i class="fas fa-wifi"></i></div>
+                        <span>Buy Data</span>
+                    </a>
+                    <a href="numbers.html" class="quick-action-card">
+                        <div class="qa-icon phone"><i class="fas fa-phone"></i></div>
+                        <span>Get Number</span>
+                    </a>
+                    <a href="bills.html" class="quick-action-card">
+                        <div class="qa-icon mobile"><i class="fas fa-mobile-alt"></i></div>
+                        <span>Buy Airtime</span>
+                    </a>
+                    <a href="#" class="quick-action-card" id="qaAddFundsBtn">
+                        <div class="qa-icon fund"><i class="fas fa-plus-circle"></i></div>
+                        <span>Add Funds</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fund Wallet Modal -->
+    <div class="modal-overlay" id="fundModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-wallet"></i> Add Funds to Wallet</h3>
+                <button class="modal-close" id="closeFundModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="current-balance-display">
+                    <span>Current Balance</span>
+                    <strong id="modalBalance">$0.00</strong>
+                </div>
+                <form id="fundForm">
+                    <div class="form-group">
+                        <label>Select Amount</label>
+                        <div class="amount-presets">
+                            <button type="button" class="preset-btn" data-amount="1000">₦1,000</button>
+                            <button type="button" class="preset-btn" data-amount="2000">₦2,000</button>
+                            <button type="button" class="preset-btn" data-amount="5000">₦5,000</button>
+                            <button type="button" class="preset-btn" data-amount="10000">₦10,000</button>
+                            <button type="button" class="preset-btn" data-amount="25000">₦25,000</button>
+                            <button type="button" class="preset-btn" data-amount="50000">₦50,000</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fundAmount">Or enter custom amount (₦)</label>
+                        <div class="input-icon">
+                            <i class="fas fa-naira-sign"></i>
+                            <input type="number" id="fundAmount" min="100" max="5000000" step="1" required placeholder="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fundMethod">Payment Method</label>
+                        <select id="fundMethod">
+                            <option value="">Select payment method</option>
+                            <option value="card">Debit/Credit Card</option>
+                            <option value="bank">Bank Transfer</option>
+                            <option value="ussd">USSD</option>
+                        </select>
+                    </div>
+                    <!-- Card Details (shown when card is selected) -->
+                    <div id="cardDetails" style="display:none;">
+                        <div class="form-group">
+                            <label for="cardNumber">Card Number</label>
+                            <div class="input-icon">
+                                <i class="fas fa-credit-card"></i>
+                                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="cardExpiry">Expiry</label>
+                                <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="cardCvv">CVV</label>
+                                <input type="text" id="cardCvv" placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block" id="fundSubmitBtn">
+                        <i class="fas fa-plus-circle"></i> Add Funds
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Transactions Modal -->
+    <div class="modal-overlay" id="allTransactionsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3><i class="fas fa-list"></i> All Transactions</h3>
+                <button class="modal-close" onclick="closeAllTransactions()">&times;</button>
+            </div>
+            <div class="modal-body" id="allTransactionsList">
+            </div>
+        </div>
+    </div>
+
+    <!-- SMS Viewer Modal -->
+    <div class="modal-overlay" id="smsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-sms"></i> SMS Messages</h3>
+                <button class="modal-close" onclick="closeSmsModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="smsMessages">
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 Nefotech. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/storage.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="https://js.paystack.co/v2/inline.js" async></script>
+</body>
+</html>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Nefotech</title>
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Login Screen -->
+    <div class="admin-login" id="loginScreen">
+        <div class="login-card">
+            <div class="logo">
+                <h1><i class="fas fa-bolt"></i> Nefotech</h1>
+                <p>Admin Panel Login</p>
+            </div>
+            <div class="login-error" id="loginError"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@nefotech.ng" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter password" autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Layout -->
+    <div class="admin-layout" id="adminLayout" style="display:none;">
+        <!-- Sidebar Backdrop (mobile) -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><i class="fas fa-bolt"></i> Nefotech <span>ADMIN</span></div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-label">Main</div>
+                    <button class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
+                    <button class="nav-item" data-page="users"><i class="fas fa-users"></i> Users</button>
+                    <button class="nav-item" data-page="transactions"><i class="fas fa-exchange-alt"></i> Transactions</button>
+                    <button class="nav-item" data-page="numbers"><i class="fas fa-phone-volume"></i> Virtual Numbers</button>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-label">Tools</div>
+                    <button class="nav-item" data-page="notifications"><i class="fas fa-bell"></i> Notifications</button>
+                    <button class="nav-item" data-page="settings"><i class="fas fa-cog"></i> Settings</button>
+                    <button class="nav-item" data-page="audit"><i class="fas fa-clipboard-list"></i> Audit Log</button>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="admin-profile">
+                    <div class="admin-avatar" id="adminAvatar">A</div>
+                    <div class="admin-info">
+                        <strong id="adminName">Admin</strong>
+                        <span>Administrator</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <button class="toggle-sidebar" id="toggleSidebar"><i class="fas fa-bars"></i></button>
+                    <h2 id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="topbar-right">
+                    <a href="../index.html" class="btn btn-outline btn-sm"><i class="fas fa-external-link-alt"></i> View Site</a>
+                    <button class="btn btn-outline btn-sm" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+
+            <div class="page-content">
+                <!-- ===== DASHBOARD ===== -->
+                <div class="admin-page active" id="page-dashboard">
+                    <div class="stats-grid" id="statsGrid"></div>
+                    <div class="dash-grid-2">
+                        <div class="card">
+                            <div class="card-header"><h3><i class="fas fa-trophy"></i> Top Spenders</h3></div>
+                            <div class="card-body" id="topSpenders"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3><i class="fas fa-clock"></i> Recent Activity</h3></div>
+                            <div class="card-body" id="recentActivity"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== USERS ===== -->
+                <div class="admin-page" id="page-users">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-users"></i> User Management</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-controls">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="userSearch" placeholder="Search users by name, email...">
+                                </div>
+                                <div class="table-filters">
+                                    <select id="userStatusFilter">
+                                        <option value="">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="suspended">Suspended</option>
+                                        <option value="banned">Banned</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Phone</th>
+                                            <th>Balance</th>
+                                            <th>Status</th>
+                                            <th>Joined</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usersTableBody">
+                                        <tr><td colspan="6"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination" id="usersPagination"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== TRANSACTIONS ===== -->
+                <div class="admin-page" id="page-transactions">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-exchange-alt"></i> Transactions</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-controls">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="txnSearch" placeholder="Search by reference, description...">
+                                </div>
+                                <div class="table-filters">
+                                    <select id="txnCategoryFilter">
+                                        <option value="">All Categories</option>
+                                        <option value="deposit">Deposit</option>
+                                        <option value="bill">Bill</option>
+                                        <option value="number">Number</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="bonus">Bonus</option>
+                                    </select>
+                                    <select id="txnTypeFilter">
+                                        <option value="">All Types</option>
+                                        <option value="credit">Credit</option>
+                                        <option value="debit">Debit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Reference</th>
+                                            <th>User</th>
+                                            <th>Type</th>
+                                            <th>Category</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="txnTableBody">
+                                        <tr><td colspan="8"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination" id="txnPagination"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== VIRTUAL NUMBERS ===== -->
+                <div class="admin-page" id="page-numbers">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-phone-volume"></i> Virtual Numbers</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-controls">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="numSearch" placeholder="Search by number, country, user...">
+                                </div>
+                                <div class="table-filters">
+                                    <select id="numStatusFilter">
+                                        <option value="">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Number</th>
+                                            <th>Country</th>
+                                            <th>User</th>
+                                            <th>Service</th>
+                                            <th>SMS</th>
+                                            <th>Status</th>
+                                            <th>Expires</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="numTableBody">
+                                        <tr><td colspan="8"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination" id="numPagination"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== NOTIFICATIONS ===== -->
+                <div class="admin-page" id="page-notifications">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-bell"></i> Broadcast Notification</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="broadcastForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="notifTitle">Title</label>
+                                        <input type="text" id="notifTitle" required placeholder="Notification title">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="notifType">Type</label>
+                                        <select id="notifType">
+                                            <option value="info">Info</option>
+                                            <option value="success">Success</option>
+                                            <option value="warning">Warning</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="notifMessage">Message</label>
+                                    <textarea id="notifMessage" required placeholder="Write your notification message..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="notifTarget">Target</label>
+                                    <select id="notifTarget">
+                                        <option value="all">All Active Users</option>
+                                    </select>
+                                    <div class="form-help">Select who receives this notification</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" id="broadcastBtn">
+                                    <i class="fas fa-paper-plane"></i> Send Broadcast
+                                </button>
+                            </form>
+                            <div class="broadcast-preview" id="broadcastPreview" style="display:none;">
+                                <h4 id="previewTitle"></h4>
+                                <p id="previewMsg"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== SETTINGS ===== -->
+                <div class="admin-page" id="page-settings">
+                    <form id="settingsForm">
+                        <div class="settings-grid">
+                            <div class="setting-card">
+                                <h4><i class="fas fa-globe"></i> General</h4>
+                                <div class="form-group">
+                                    <label for="setSiteName">Site Name</label>
+                                    <input type="text" id="setSiteName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="setCurrency">Currency Code</label>
+                                    <input type="text" id="setCurrency" placeholder="NGN">
+                                </div>
+                                <div class="form-group">
+                                    <label for="setCurrencySymbol">Currency Symbol</label>
+                                    <input type="text" id="setCurrencySymbol" placeholder="₦">
+                                </div>
+                            </div>
+                            <div class="setting-card">
+                                <h4><i class="fas fa-wallet"></i> Wallet</h4>
+                                <div class="form-group">
+                                    <label for="setWelcome">Welcome Bonus (₦)</label>
+                                    <input type="number" id="setWelcome" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="setFee">Service Fee (₦)</label>
+                                    <input type="number" id="setFee" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="setMaxDeposit">Max Deposit (₦)</label>
+                                    <input type="number" id="setMaxDeposit" step="1">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top:24px;">
+                            <button type="submit" class="btn btn-primary" id="saveSettingsBtn">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ===== AUDIT LOG ===== -->
+                <div class="admin-page" id="page-audit">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-clipboard-list"></i> Audit Log</h3>
+                        </div>
+                        <div class="card-body">
+                            <div style="overflow-x:auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Admin</th>
+                                            <th>Action</th>
+                                            <th>Target</th>
+                                            <th>Details</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditTableBody">
+                                        <tr><td colspan="5"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</div></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="pagination" id="auditPagination"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="userModalTitle">User Details</h3>
+                <button class="modal-close" onclick="closeModal('userModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="userModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-overlay" id="editUserModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit User</h3>
+                <button class="modal-close" onclick="closeModal('editUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" id="editUserId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editUserName">Name</label>
+                            <input type="text" id="editUserName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserEmail">Email</label>
+                            <input type="email" id="editUserEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editUserPhone">Phone</label>
+                            <input type="text" id="editUserPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserStatus">Status</label>
+                            <select id="editUserStatus">
+                                <option value="active">Active</option>
+                                <option value="suspended">Suspended</option>
+                                <option value="banned">Banned</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editUserRole">Role</label>
+                        <select id="editUserRole">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adjust Wallet Modal -->
+    <div class="modal-overlay" id="walletModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Adjust Wallet</h3>
+                <button class="modal-close" onclick="closeModal('walletModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="walletForm">
+                    <input type="hidden" id="walletUserId">
+                    <p style="color:var(--text-muted);margin-bottom:16px;">Current balance: <strong id="walletCurrentBalance" style="color:white;"></strong></p>
+                    <div class="form-group">
+                        <label for="walletAmount">Amount (₦)</label>
+                        <input type="number" id="walletAmount" required placeholder="Positive to add, negative to deduct">
+                        <div class="form-help">Use negative values to deduct</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="walletReason">Reason</label>
+                        <input type="text" id="walletReason" required placeholder="Reason for adjustment">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-wallet"></i> Adjust Balance
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="modal-overlay" id="resetPwModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Reset Password</h3>
+                <button class="modal-close" onclick="closeModal('resetPwModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="resetPwForm">
+                    <input type="hidden" id="resetPwUserId">
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" required minlength="8" placeholder="Minimum 8 characters">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-key"></i> Reset Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
