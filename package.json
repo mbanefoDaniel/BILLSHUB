@@ -1,7 +1,7 @@
 {
-  "name": "crypto-flasher",
+  "name": "bills-hub",
   "version": "1.0.0",
-  "description": "",
+  "description": "Bill payment and virtual number platform",
   "main": "index.js",
   "scripts": {
     "start": "node server/server.js",
