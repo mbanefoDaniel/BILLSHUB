@@ -9,18 +9,18 @@ const sql = neon(process.env.DATABASE_URL);
 
 // Helper: run a query and return all rows
 async function query(text, params = []) {
-    return await sql(text, params);
+    return await sql.query(text, params);
 }
 
 // Helper: run a query and return first row or null
 async function get(text, params = []) {
-    const rows = await sql(text, params);
+    const rows = await sql.query(text, params);
     return rows[0] || null;
 }
 
 // Helper: run an INSERT/UPDATE/DELETE, return rows if RETURNING used
 async function run(text, params = []) {
-    return await sql(text, params);
+    return await sql.query(text, params);
 }
 
 // Initialize tables
