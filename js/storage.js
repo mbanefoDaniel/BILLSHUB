@@ -42,10 +42,17 @@ const API = {
         if (body) opts.body = JSON.stringify(body);
 
         const res = await fetch(API_BASE + path, opts);
-        const data = await res.json();
+
+        let data;
+        const text = await res.text();
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch {
+            throw new Error(res.ok ? 'Invalid server response' : `Server error (${res.status})`);
+        }
 
         if (!res.ok) {
-            throw new Error(data.error || 'Request failed');
+            throw new Error(data.error || `Request failed (${res.status})`);
         }
         return data;
     },

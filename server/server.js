@@ -14,7 +14,6 @@ const requiredEnv = ['JWT_SECRET'];
 for (const key of requiredEnv) {
     if (!process.env[key]) {
         console.error(`FATAL: Missing required environment variable: ${key}`);
-        process.exit(1);
     }
 }
 if (process.env.JWT_SECRET.length < 32) {
@@ -132,8 +131,13 @@ async function ensureDb() {
 
 // Ensure DB is initialized before any request
 app.use(async (req, res, next) => {
-    try { await ensureDb(); } catch (err) { console.error('DB init error:', err.message); }
-    next();
+    try {
+        await ensureDb();
+        next();
+    } catch (err) {
+        console.error('DB init error:', err.message);
+        res.status(503).json({ error: 'Service temporarily unavailable' });
+    }
 });
 
 // API routes

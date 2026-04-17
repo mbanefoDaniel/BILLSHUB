@@ -2,29 +2,32 @@ const { neon } = require('@neondatabase/serverless');
 
 if (!process.env.DATABASE_URL) {
     console.error('FATAL: Missing DATABASE_URL environment variable');
-    process.exit(1);
 }
 
-const sql = neon(process.env.DATABASE_URL);
+const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
 
 // Helper: run a query and return all rows
 async function query(text, params = []) {
+    if (!sql) throw new Error('DATABASE_URL not configured');
     return await sql.query(text, params);
 }
 
 // Helper: run a query and return first row or null
 async function get(text, params = []) {
+    if (!sql) throw new Error('DATABASE_URL not configured');
     const rows = await sql.query(text, params);
     return rows[0] || null;
 }
 
 // Helper: run an INSERT/UPDATE/DELETE, return rows if RETURNING used
 async function run(text, params = []) {
+    if (!sql) throw new Error('DATABASE_URL not configured');
     return await sql.query(text, params);
 }
 
 // Initialize tables
 async function initializeDatabase() {
+    if (!sql) throw new Error('DATABASE_URL not configured');
     await sql`
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
